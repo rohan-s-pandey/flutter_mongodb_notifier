@@ -1,16 +1,19 @@
-# flutternotifi
+# Flutter MongoDB Notifier
 
-A new Flutter project.
+A Flutter application that integrates with a MongoDB database to monitor a collection, trigger notifications, and play music when a new document is inserted.
 
-## Getting Started
+## Features
+- **MongoDB Integration:** Connects to a MongoDB database and monitors a specific collection.
+- **Notification System:** Sends a local notification when a new document is detected.
+- **Music Playback:** Plays a predefined song when a notification is triggered.
 
-This project is a starting point for a Flutter application.
+## Requirements
+- Flutter SDK: >=3.5.1 <4.0.0
+- MongoDB instance (local or cloud)
+- Android Studio or Visual Studio Code (for development)
 
-A few resources to get you started if this is your first Flutter project:
+## Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/flutter_mongodb_notifier.git
