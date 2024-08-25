@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 
 void main() {
@@ -30,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late mongo.DbCollection collection;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
+  final AudioPlayer audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -65,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (documents.isNotEmpty) {
         print('New document detected: ${documents.last}');
         showNotification('New Document', 'A new document has been added to MongoDB');
+        playSong();
       }
       await Future.delayed(Duration(seconds: 10)); // Poll every 10 seconds
     }
@@ -90,6 +93,10 @@ class _MyHomePageState extends State<MyHomePage> {
       platformChannelSpecifics,
       payload: 'Notification Payload',
     );
+  }
+
+  Future<void> playSong() async {
+    await audioPlayer.play(AssetSource('Song.mp3'));
   }
 
   @override
