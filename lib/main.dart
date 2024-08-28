@@ -62,14 +62,30 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> monitorCollection() async {
-    while (true) {
-      final documents = await collection.find().toList();
-      if (documents.isNotEmpty) {
-        print('New document detected: ${documents.last}');
-        showNotification('New Document', 'A new document has been added to MongoDB');
-        playSong();
+    try {
+      final pipeline = [
+        {
+          '\$match': {'operationType': 'insert'}
+        }
+      ];
+
+      final changeStream = collection.watch(pipeline);
+
+      print('Monitoring for new documents...');
+
+      await for (var change in changeStream) {
+        if (change['operationType'] == 'insert') {
+          final newDocument = change['fullDocument'];
+          print('New document detected: $newDocument');
+          await showNotification('New Document Added', 'A new document has been added to MongoDB');
+          await playSong();
+        }
       }
-      await Future.delayed(Duration(seconds: 10)); // Poll every 10 seconds
+    } catch (e) {
+      print('An error occurred while monitoring the collection: $e');
+    } finally {
+      await db.close(); // Ensure the database connection is closed when done
+      print('Stopped monitoring MongoDB collection.');
     }
   }
 
