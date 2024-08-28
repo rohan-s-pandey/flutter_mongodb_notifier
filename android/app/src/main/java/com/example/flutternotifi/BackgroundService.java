@@ -23,9 +23,6 @@ public class BackgroundService extends JobService {
         mediaPlayer.setLooping(false);
         mediaPlayer.start();
 
-        // You can perform additional background work here
-
-        // Return true if your job requires more time to complete (e.g., asynchronous tasks)
         return true;
     }
 
@@ -33,7 +30,6 @@ public class BackgroundService extends JobService {
     public boolean onStopJob(JobParameters params) {
         Log.d(TAG, "Job stopped");
 
-        // Stop and release the MediaPlayer if it is still playing
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.stop();
@@ -42,7 +38,6 @@ public class BackgroundService extends JobService {
             mediaPlayer = null;
         }
 
-        // Return true if the job should be rescheduled, otherwise false
         return false;
     }
 }
