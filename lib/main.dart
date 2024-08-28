@@ -120,7 +120,6 @@ class _MyHomePageState extends State<MyHomePage> {
     db.close();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
