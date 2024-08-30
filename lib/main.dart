@@ -3,6 +3,7 @@ import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 void main() {
   runApp(MyApp());
@@ -32,12 +33,16 @@ class _MyHomePageState extends State<MyHomePage> {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
   final AudioPlayer audioPlayer = AudioPlayer();
+  bool isConnectedToDB = false;
+  bool isConnectedToInternet = false;
 
   @override
   void initState() {
     super.initState();
     initializeNotifications();
+    checkInternetConnection();
     connectToMongoDB();
+    showNotification('App Started', 'The app has started successfully.');
   }
 
   Future<void> initializeNotifications() async {
@@ -51,41 +56,64 @@ class _MyHomePageState extends State<MyHomePage> {
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
+  Future<void> checkInternetConnection() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.mobile ||
+          connectivityResult == ConnectivityResult.wifi) {
+        isConnectedToInternet = true;
+      } else {
+        isConnectedToInternet = false;
+      }
+      setState(() {});
+    } catch (e) {
+      print('Error checking internet connection: $e');
+      setState(() {
+        isConnectedToInternet = false;
+      });
+    }
+  }
+
   Future<void> connectToMongoDB() async {
-    db = mongo.Db('mongodb://localhost:27017/ROHAN1');
-    await db.open();
-
-    collection = db.collection('ROHAN!');
-
-    print('Connected to MongoDB');
-    monitorCollection();
+    try {
+      db = mongo.Db('mongodb+srv://21fycsa36rohan:isS7FVmRICRlZxtw@cluster0.fj1dt.mongodb.net/ROHAN1?retryWrites=true&w=majority');
+      await db.open();
+      collection = db.collection('ROHAN!');
+      isConnectedToDB = true;
+      showNotification('Database Connection', 'Connected to MongoDB successfully.');
+      monitorCollection();
+    } catch (e) {
+      isConnectedToDB = false;
+      print('Error connecting to MongoDB: $e');
+      showNotification('Database Connection', 'Failed to connect to MongoDB: $e');
+    }
+    setState(() {});
   }
 
   Future<void> monitorCollection() async {
-    try {
-      final pipeline = [
-        {
-          '\$match': {'operationType': 'insert'}
+    mongo.ObjectId? lastDocumentId;
+
+    while (true) {
+      try {
+        final latestDocument = await collection.findOne(
+          mongo.where.sortBy('_id', descending: true),
+        );
+
+        if (latestDocument != null) {
+          final currentDocumentId = latestDocument['_id'] as mongo.ObjectId;
+
+          if (lastDocumentId == null || currentDocumentId != lastDocumentId) {
+            lastDocumentId = currentDocumentId;
+            print('New document detected: $latestDocument');
+            showNotification('New Document', 'A new document has been added to MongoDB');
+            await playSong();
+          }
         }
-      ];
-
-      final changeStream = collection.watch(pipeline);
-
-      print('Monitoring for new documents...');
-
-      await for (var change in changeStream) {
-        if (change['operationType'] == 'insert') {
-          final newDocument = change['fullDocument'];
-          print('New document detected: $newDocument');
-          await showNotification('New Document Added', 'A new document has been added to MongoDB');
-          await playSong();
-        }
+      } catch (e) {
+        print('Error in monitoring collection: $e');
       }
-    } catch (e) {
-      print('An error occurred while monitoring the collection: $e');
-    } finally {
-      await db.close(); // Ensure the database connection is closed when done
-      print('Stopped monitoring MongoDB collection.');
+
+      await Future.delayed(Duration(seconds: 10));
     }
   }
 
@@ -112,7 +140,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> playSong() async {
-    await audioPlayer.play(AssetSource('Song.mp3'));
+    try {
+      await audioPlayer.play(AssetSource('assets/song.mp3'));
+      print('Playing song...');
+    } catch (e) {
+      print('Failed to play song: $e');
+    }
   }
 
   @override
@@ -120,6 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
     db.close();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,9 +161,25 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text('MongoDB Notification'),
       ),
       body: Center(
-        child: Text(
-          'Monitoring MongoDB collection...',
-          style: TextStyle(fontSize: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isConnectedToDB
+                  ? 'Connected to MongoDB!'
+                  : 'Failed to connect to MongoDB.',
+              style: TextStyle(
+                  fontSize: 20, color: isConnectedToDB ? Colors.green : Colors.red),
+            ),
+            SizedBox(height: 20),
+            Text(
+              isConnectedToInternet
+                  ? 'Connected to the Internet!'
+                  : 'No Internet connection.',
+              style: TextStyle(
+                  fontSize: 20, color: isConnectedToInternet ? Colors.green : Colors.red),
+            ),
+          ],
         ),
       ),
     );

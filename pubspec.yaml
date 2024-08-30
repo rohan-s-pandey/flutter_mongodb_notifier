@@ -11,10 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  mongo_dart: ^0.9.0
+  mongo_dart: ^0.10.3
   flutter_local_notifications: ^17.2.2
-  audioplayers: ^6.0.0
+  audioplayers: ^6.1.0
   cupertino_icons: ^1.0.8
+  connectivity_plus: ^6.0.5
 
 dev_dependencies:
   flutter_test:
